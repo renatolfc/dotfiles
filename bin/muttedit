@@ -1,0 +1,33 @@
+#!/bin/sh -u
+# 
+# For this to work, mutt should be started a lit bit differently. I defined an
+# alias, smutt, that takes care of starting it:
+#
+# alias smutt='GPG_TTY=/dev/pts/0 screen -DRAa -S mutt /usr/bin/mutt'
+#
+# Spawn a mutt to edit a message and dispatch a reply in screen.
+# This lets you detach from an unfinished reply and finish it later.
+# Then just put "set editor=muttedit". Have to unset it for edit-message.
+#    - Cameron Simpson <cs@zip.com.au> 31mar2006
+#    - Renato Cunha <renato@renatocunha.com> modified this file some tile later
+# 
+
+#: ${TMPDIR:=/tmp}
+
+cmd=$0
+usage="Usage: $cmd filename"
+
+[ $# = 1 ] || { echo "$usage" >&2; exit 2; }
+filename=$1; shift
+[ -s "$filename" ] || { echo "$cmd: expected non-empty file, got: $filename" >&2; exit 2; }
+
+now=`date '+%d%b%Y-%H:%M'|tr '[A-Z]' '[a-z]'`
+subj=`sed -n -e '/^$/q; /^[Ss]ubject:/{ s/^[^:]*:[ 	]*//; s/[^a-zA-Z0-9]/_/g; s/___*/_/g; p; q; }' <"$filename" | cut -c1-20`
+title=`echo $subj | cut -c 1-10 | iconv -f utf-8 -t latin1`
+
+#exec screen -m -S "mutt-$now $subj" mutt -F "$HOME/.muttrc" -e 'set editor=$EDITOR' -e 'unset signature' -e 'unmy_hdr X-Disclaimer' -e 'unmy_hdr X-PGP-Key' -H "$filename"
+screen -t "$title" $(which mutt) -F "$HOME/.muttrc" -e "set editor=\"$EDITOR -c ':set spell spelllang=pt'\"" -e 'unset signature' -e 'unmy_hdr X-Disclaimer' -e 'unmy_hdr X-PGP-Key' -H "$filename"
+#screen -t "$title" vim "$filename"
+
+sleep 5
+
