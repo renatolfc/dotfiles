@@ -193,3 +193,5 @@ export LC_DATE=en_DK.utf-8
 export LC_ALL=en_US.utf-8
 
 alias vim=nvim
+
+eval $(dircolors -b $HOME/.dir_colors)
